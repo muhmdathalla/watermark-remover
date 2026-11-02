@@ -239,11 +239,15 @@
             <h2 class="empty-title">Tarik &amp; Lepaskan Foto di Sini</h2>
             <p class="empty-desc">Mendukung format PNG, JPG, WebP resolusi tinggi hingga 4K+. Bebas watermark kecil (tanggal/timestamp), logo besar, maupun watermark berulang (stock photo grid).</p>
             <div class="empty-actions">
-              <button class="btn-primary" id="btnChooseFile">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Pilih File Gambar
+              <button class="btn-primary" id="btnLaunchDemoSlider">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                ✨ Buka Demo Slider Preview Langsung
               </button>
-              <span class="empty-or">atau coba contoh berikut:</span>
+              <button class="btn-ghost" id="btnChooseFile">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Pilih File Gambar Sendiri
+              </button>
+              <span class="empty-or">atau klik salah satu sampel uji berikut:</span>
             </div>
 
             <!-- Instant Sample Gallery Cards -->
@@ -266,6 +270,20 @@
 
           <!-- Comparison Slider Mode Container -->
           <div class="slider-viewport" id="sliderViewport" style="display:none;">
+            <!-- Instant Sample Demo Switcher -->
+            <div class="slider-sample-bar" id="sliderSampleBar">
+              <span class="sample-bar-label">Uji Contoh Preset:</span>
+              <button class="sample-tab-btn active" data-sample="date-stamp">1. Tanggal Kamera (Kecil)</button>
+              <button class="sample-tab-btn" data-sample="translucent-grid">2. Grid Stock (Banyak)</button>
+              <button class="sample-tab-btn" data-sample="large-logo">3. Logo Studio (Besar)</button>
+              <button class="sample-tab-btn" data-sample="social-watermark">4. Handle Sosmed</button>
+              <div class="divider-v"></div>
+              <button class="btn-ghost-sm" id="btnOpenInEditor" title="Buka foto ini di editor untuk coba hapus manual">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span>Coba di Editor Masking</span>
+              </button>
+            </div>
+
             <div class="slider-container" id="sliderContainer">
               <!-- Original Image Layer -->
               <div class="slider-layer slider-original">

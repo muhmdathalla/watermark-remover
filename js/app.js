@@ -14,8 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const fileInput = document.getElementById('fileInput');
   const btnChooseFile = document.getElementById('btnChooseFile');
+  const btnLaunchDemoSlider = document.getElementById('btnLaunchDemoSlider');
   const btnUploadNew = document.getElementById('btnUploadNew');
   const btnSampleGallery = document.getElementById('btnSampleGallery');
+  const btnOpenInEditor = document.getElementById('btnOpenInEditor');
+  const sampleTabButtons = document.querySelectorAll('.sample-tab-btn');
 
   // View Switcher
   const btnViewEditor = document.getElementById('btnViewEditor');
@@ -416,33 +419,94 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function loadSample(sampleId) {
-    const { canvas, sample } = SampleImages.createSampleCanvas(sampleId);
-    handleLoadedImage(canvas);
+  let currentSampleId = 'date-stamp';
 
-    // Auto switch algorithm based on sample type recommendation
-    if (sample.type === 'multiple') {
-      const radio = document.getElementById('algoTranslucent');
-      if (radio) {
-        radio.checked = true;
-        document.querySelectorAll('.algo-radio').forEach(r => r.classList.remove('active'));
-        radio.closest('.algo-radio').classList.add('active');
-      }
-    } else if (sample.type === 'small') {
-      const radio = document.getElementById('algoFastMarching');
-      if (radio) {
-        radio.checked = true;
-        document.querySelectorAll('.algo-radio').forEach(r => r.classList.remove('active'));
-        radio.closest('.algo-radio').classList.add('active');
-      }
-    } else {
-      const radio = document.getElementById('algoSynthesis');
+  function loadSampleDemoSlider(sampleId) {
+    currentSampleId = sampleId;
+    const pair = SampleImages.createComparisonPair(sampleId);
+
+    emptyDropzone.style.display = 'none';
+    canvasWorkspace.style.display = 'flex';
+
+    currentOriginalImageData = pair.originalImageData;
+    currentProcessedImageData = pair.cleanImageData;
+
+    // Setup canvas editor in background
+    const sampleDef = SampleImages.list.find(s => s.id === sampleId) || SampleImages.list[0];
+    const { canvas } = SampleImages.createSampleCanvas(sampleId);
+    canvasMgr.loadImage(canvas);
+
+    // Set comparison data for slider & side-by-side
+    slider.setComparisonData(pair.originalImageData, pair.cleanImageData);
+
+    // Update active tab in sample switcher bar
+    sampleTabButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sample === sampleId);
+    });
+
+    // Auto set recommended algorithm in sidebar
+    if (sampleDef.recommendedAlgo) {
+      const radio = document.querySelector(`input[name="inpaintingAlgo"][value="${sampleDef.recommendedAlgo}"]`);
       if (radio) {
         radio.checked = true;
         document.querySelectorAll('.algo-radio').forEach(r => r.classList.remove('active'));
         radio.closest('.algo-radio').classList.add('active');
       }
     }
+
+    switchView('slider');
+    updateUIState();
+  }
+
+  function loadSample(sampleId, openInSlider = true) {
+    if (openInSlider) {
+      loadSampleDemoSlider(sampleId);
+      return;
+    }
+
+    const { canvas, sample } = SampleImages.createSampleCanvas(sampleId);
+    handleLoadedImage(canvas);
+
+    if (sample.drawDefaultMask) {
+      setTimeout(() => {
+        sample.drawDefaultMask(canvasMgr.maskCtx, canvasMgr.width, canvasMgr.height);
+        canvasMgr.saveHistoryState('Default Mask');
+        updateUIState();
+      }, 150);
+    }
+  }
+
+  // Launch live slider demo button in empty dropzone
+  if (btnLaunchDemoSlider) {
+    btnLaunchDemoSlider.addEventListener('click', () => {
+      loadSampleDemoSlider('date-stamp');
+    });
+  }
+
+  // Sample tab switcher inside slider view
+  sampleTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sampleId = btn.dataset.sample;
+      loadSampleDemoSlider(sampleId);
+    });
+  });
+
+  // Open in editor button from slider view
+  if (btnOpenInEditor) {
+    btnOpenInEditor.addEventListener('click', () => {
+      const sample = SampleImages.list.find(s => s.id === currentSampleId) || SampleImages.list[0];
+      const { canvas } = SampleImages.createSampleCanvas(currentSampleId);
+      handleLoadedImage(canvas);
+
+      setTimeout(() => {
+        if (sample.drawDefaultMask) {
+          sample.drawDefaultMask(canvasMgr.maskCtx, canvasMgr.width, canvasMgr.height);
+          canvasMgr.saveHistoryState('Sample Mask');
+        }
+        switchView('editor');
+        updateUIState();
+      }, 150);
+    });
   }
 
   btnSampleGallery.addEventListener('click', () => sampleModal.showModal());
