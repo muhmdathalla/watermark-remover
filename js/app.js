@@ -387,7 +387,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const thumbCanvas = document.getElementById(`thumb_${sample.id}`);
         if (thumbCanvas) {
           const tCtx = thumbCanvas.getContext('2d');
-          sample.render(tCtx, 160, 90);
+          if (sample.imageBefore) {
+            const im = new Image();
+            im.onload = () => tCtx.drawImage(im, 0, 0, 160, 90);
+            im.src = sample.imageBefore;
+          } else if (sample.render) {
+            sample.render(tCtx, 160, 90);
+          }
         }
       }, 50);
 
@@ -413,17 +419,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const mThumb = document.getElementById(`modal_thumb_${sample.id}`);
         if (mThumb) {
           const mCtx = mThumb.getContext('2d');
-          sample.render(mCtx, 320, 180);
+          if (sample.imageBefore) {
+            const im = new Image();
+            im.onload = () => mCtx.drawImage(im, 0, 0, 320, 180);
+            im.src = sample.imageBefore;
+          } else if (sample.render) {
+            sample.render(mCtx, 320, 180);
+          }
         }
       }, 60);
     });
   }
 
-  let currentSampleId = 'date-stamp';
+  let currentSampleId = 'user-photo';
 
-  function loadSampleDemoSlider(sampleId) {
+  async function loadSampleDemoSlider(sampleId) {
     currentSampleId = sampleId;
-    const pair = SampleImages.createComparisonPair(sampleId);
+    const pair = await SampleImages.createComparisonPair(sampleId);
 
     emptyDropzone.style.display = 'none';
     canvasWorkspace.style.display = 'flex';
@@ -433,13 +445,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup canvas editor in background
     const sampleDef = SampleImages.list.find(s => s.id === sampleId) || SampleImages.list[0];
-    const { canvas } = SampleImages.createSampleCanvas(sampleId);
+    const { canvas } = await SampleImages.createSampleCanvas(sampleId);
     canvasMgr.loadImage(canvas);
 
     // Set comparison data for slider & side-by-side
     slider.setComparisonData(pair.originalImageData, pair.cleanImageData);
 
     // Update active tab in sample switcher bar
+    const sampleTabButtons = document.querySelectorAll('.sample-tab-btn');
     sampleTabButtons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.sample === sampleId);
     });
@@ -458,13 +471,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUIState();
   }
 
-  function loadSample(sampleId, openInSlider = true) {
+  async function loadSample(sampleId, openInSlider = true) {
     if (openInSlider) {
-      loadSampleDemoSlider(sampleId);
+      await loadSampleDemoSlider(sampleId);
       return;
     }
 
-    const { canvas, sample } = SampleImages.createSampleCanvas(sampleId);
+    const { canvas, sample } = await SampleImages.createSampleCanvas(sampleId);
     handleLoadedImage(canvas);
 
     if (sample.drawDefaultMask) {
@@ -479,12 +492,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Launch live slider demo button in empty dropzone
   if (btnLaunchDemoSlider) {
     btnLaunchDemoSlider.addEventListener('click', () => {
-      loadSampleDemoSlider('date-stamp');
+      loadSampleDemoSlider('user-photo');
     });
   }
 
   // Sample tab switcher inside slider view
-  sampleTabButtons.forEach(btn => {
+  document.querySelectorAll('.sample-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const sampleId = btn.dataset.sample;
       loadSampleDemoSlider(sampleId);
@@ -493,9 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Open in editor button from slider view
   if (btnOpenInEditor) {
-    btnOpenInEditor.addEventListener('click', () => {
+    btnOpenInEditor.addEventListener('click', async () => {
       const sample = SampleImages.list.find(s => s.id === currentSampleId) || SampleImages.list[0];
-      const { canvas } = SampleImages.createSampleCanvas(currentSampleId);
+      const { canvas } = await SampleImages.createSampleCanvas(currentSampleId);
       handleLoadedImage(canvas);
 
       setTimeout(() => {

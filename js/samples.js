@@ -15,6 +15,18 @@
 const SampleImages = {
   list: [
     {
+      id: 'user-photo',
+      title: 'Foto Anda: IVE Fancall Collage (Grid @ive.verse & Sticker)',
+      tag: 'Foto Upload Anda',
+      desc: 'Foto kolase IVE fancall yang Anda unggah. Menghapus sticker "love u baee", watermark berulang "@ive.verse", dan stempel platform kecil dengan menjaga wajah & objek tetap sempurna.',
+      width: 1072,
+      height: 1948,
+      type: 'complex',
+      recommendedAlgo: 'exemplar',
+      imageBefore: 'assets/user_photo.png',
+      imageAfter: 'assets/user_photo_cleaned.png'
+    },
+    {
       id: 'date-stamp',
       title: 'Watermark Kecil: Stempel Tanggal Kamera',
       tag: 'Watermark Kecil',
@@ -368,8 +380,24 @@ const SampleImages = {
     canvas.width = sample.width;
     canvas.height = sample.height;
     const ctx = canvas.getContext('2d');
-    sample.render(ctx, sample.width, sample.height);
-    return { canvas, sample };
+
+    if (sample.imageBefore) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+          resolve({ canvas, sample });
+        };
+        img.onerror = () => {
+          if (sample.render) sample.render(ctx, sample.width, sample.height);
+          resolve({ canvas, sample });
+        };
+        img.src = sample.imageBefore;
+      });
+    }
+
+    if (sample.render) sample.render(ctx, sample.width, sample.height);
+    return Promise.resolve({ canvas, sample });
   },
 
   createComparisonPair: function(sampleId) {
@@ -379,18 +407,56 @@ const SampleImages = {
     origCanvas.width = sample.width;
     origCanvas.height = sample.height;
     const origCtx = origCanvas.getContext('2d');
-    sample.render(origCtx, sample.width, sample.height);
 
     const cleanCanvas = document.createElement('canvas');
     cleanCanvas.width = sample.width;
     cleanCanvas.height = sample.height;
     const cleanCtx = cleanCanvas.getContext('2d');
-    sample.renderClean(cleanCtx, sample.width, sample.height);
 
-    return {
+    if (sample.imageBefore && sample.imageAfter) {
+      return new Promise((resolve) => {
+        const imgBefore = new Image();
+        const imgAfter = new Image();
+        let loaded = 0;
+        const onDone = () => {
+          loaded++;
+          if (loaded === 2) {
+            origCtx.drawImage(imgBefore, 0, 0);
+            cleanCtx.drawImage(imgAfter, 0, 0);
+            resolve({
+              sample,
+              canvas: origCanvas,
+              originalImageData: origCtx.getImageData(0, 0, sample.width, sample.height),
+              cleanImageData: cleanCtx.getImageData(0, 0, sample.width, sample.height)
+            });
+          }
+        };
+        imgBefore.onload = onDone;
+        imgAfter.onload = onDone;
+        imgBefore.onerror = () => {
+          if (sample.render) sample.render(origCtx, sample.width, sample.height);
+          if (sample.renderClean) sample.renderClean(cleanCtx, sample.width, sample.height);
+          resolve({
+            sample,
+            canvas: origCanvas,
+            originalImageData: origCtx.getImageData(0, 0, sample.width, sample.height),
+            cleanImageData: cleanCtx.getImageData(0, 0, sample.width, sample.height)
+          });
+        };
+        imgAfter.onerror = imgBefore.onerror;
+        imgBefore.src = sample.imageBefore;
+        imgAfter.src = sample.imageAfter;
+      });
+    }
+
+    if (sample.render) sample.render(origCtx, sample.width, sample.height);
+    if (sample.renderClean) sample.renderClean(cleanCtx, sample.width, sample.height);
+
+    return Promise.resolve({
       sample,
+      canvas: origCanvas,
       originalImageData: origCtx.getImageData(0, 0, sample.width, sample.height),
       cleanImageData: cleanCtx.getImageData(0, 0, sample.width, sample.height)
-    };
+    });
   }
 };
