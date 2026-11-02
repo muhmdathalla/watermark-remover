@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA // Pro Watermark Inpainting Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-dark">
+  <div id="app" class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <div class="brand-info">
+            <span class="brand-title">AURA <span class="brand-tag">PRO</span></span>
+            <span class="brand-subtitle">Ultra-Precision Inpainting Engine</span>
+          </div>
+        </div>
+
+        <div class="view-switcher" id="viewSwitcher">
+          <button class="view-btn active" data-view="editor" id="btnViewEditor" title="Mask Editor (E)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Masking Editor</span>
+          </button>
+          <button class="view-btn" data-view="slider" id="btnViewSlider" title="Interactive Slider Preview (V)" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+            <span>Slider Preview</span>
+          </button>
+          <button class="view-btn" data-view="sidebyside" id="btnViewSideBySide" title="Side by Side Split (S)" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="9" height="18" rx="1"/><rect x="13" y="3" width="9" height="18" rx="1"/></svg>
+            <span>Side by Side</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- Quick State Pills -->
+        <div class="history-controls">
+          <button class="icon-btn" id="btnUndo" title="Undo (Ctrl+Z)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          </button>
+          <button class="icon-btn" id="btnRedo" title="Redo (Ctrl+Y)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+          </button>
+          <div class="divider-v"></div>
+          <button class="icon-btn" id="btnClearMask" title="Clear Mask (C)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </button>
+          <button class="icon-btn" id="btnResetImage" title="Revert to Original (Alt+R)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 2v6h6"/><path d="M2.66 15.57a10 10 0 1 0 .57-8.38l-2.4 2.4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button class="btn-ghost" id="btnSampleGallery">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Foto Contoh</span>
+        </button>
+        <button class="btn-ghost" id="btnUploadNew">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Buka Foto</span>
+        </button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+
+        <button class="btn-primary" id="btnProcess" disabled>
+          <span class="btn-spinner"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+          <span>Hapus Watermark</span>
+        </button>
+
+        <button class="btn-export" id="btnExport" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export HD</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <div class="workspace">
+      <!-- Left Tool Palette Sidebar -->
+      <aside class="sidebar-tools" id="sidebarTools">
+        <div class="tool-section">
+          <div class="section-label">ALAT SELEKSI</div>
+          <div class="tool-grid">
+            <button class="tool-card active" data-tool="brush" id="toolBrush" title="Smart Brush (B)">
+              <div class="tool-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-1.5 2 1.48.55 3.5 1 5.5 1 2.21 0 4-1.79 4-4 0-.82-.3-1.59-.83-2.18L7.07 14.94z"/></svg>
+              </div>
+              <span class="tool-card-name">Kuas Smart</span>
+              <span class="tool-card-key">B</span>
+            </button>
+
+            <button class="tool-card" data-tool="eraser" id="toolEraser" title="Penghapus Mask (E)">
+              <div class="tool-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+              </div>
+              <span class="tool-card-name">Eraser Mask</span>
+              <span class="tool-card-key">E</span>
+            </button>
+
+            <button class="tool-card" data-tool="lasso" id="toolLasso" title="Polygon Lasso (L)">
+              <div class="tool-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 22a5 5 0 0 1-2-4c0-3.87 3.13-7 7-7h4a5 5 0 0 0 5-5c0-2.76-2.24-5-5-5S11 3.24 11 6"/><circle cx="16" cy="19" r="3"/></svg>
+              </div>
+              <span class="tool-card-name">Lasso Logo</span>
+              <span class="tool-card-key">L</span>
+            </button>
+
+            <button class="tool-card" data-tool="rect" id="toolRect" title="Kotak / Box (R)">
+              <div class="tool-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/></svg>
+              </div>
+              <span class="tool-card-name">Kotak / Box</span>
+              <span class="tool-card-key">R</span>
+            </button>
+
+            <button class="tool-card" data-tool="wand" id="toolWand" title="Auto Text / Color Keyer (W)">
+              <div class="tool-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 4-2 4-4 2 4 2 2 4 2-4 4-2-4-2-2-4Z"/><path d="m4 20 8-8"/></svg>
+              </div>
+              <span class="tool-card-name">Auto Font Key</span>
+              <span class="tool-card-key">W</span>
+            </button>
+
+            <button class="tool-card" data-tool="pan" id="toolPan" title="Geser Kanvas (H / Space)">
+              <div class="tool-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+              </div>
+              <span class="tool-card-name">Geser (Pan)</span>
+              <span class="tool-card-key">H</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tool Properties Panel -->
+        <div class="tool-section">
+          <div class="section-label">PARAMETER KUAS</div>
+          <div class="param-control">
+            <div class="param-header">
+              <span>Ukuran Kuas</span>
+              <span class="param-value" id="valBrushSize">36 px</span>
+            </div>
+            <input type="range" id="inputBrushSize" min="4" max="180" value="36" class="slider-input">
+            <div class="param-ticks">
+              <span>4px</span>
+              <span>180px</span>
+            </div>
+          </div>
+
+          <div class="param-control">
+            <div class="param-header">
+              <span>Feather (Kehalusan Tepi)</span>
+              <span class="param-value" id="valFeather">3 px</span>
+            </div>
+            <input type="range" id="inputFeather" min="0" max="16" value="3" class="slider-input">
+            <div class="param-ticks">
+              <span>Tegas</span>
+              <span>Halus</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inpainting Engine / Algorithm Selector -->
+        <div class="tool-section">
+          <div class="section-label">METODE REKONSTRUKSI</div>
+          <div class="algo-selector">
+            <label class="algo-radio active" for="algoSynthesis">
+              <input type="radio" name="inpaintingAlgo" id="algoSynthesis" value="exemplar" checked>
+              <div class="algo-info">
+                <span class="algo-title">Exemplar Pattern Synthesizer</span>
+                <span class="algo-desc">Menganalisa tekstur latar &amp; tepi objek sekitar. Sempurna untuk motif, pola, kulit, kain, dan detail rumit tanpa efek buram.</span>
+              </div>
+            </label>
+
+            <label class="algo-radio" for="algoTranslucent">
+              <input type="radio" name="inpaintingAlgo" id="algoTranslucent" value="translucent">
+              <div class="algo-info">
+                <span class="algo-title">Alpha Inversion (Translucent Logo)</span>
+                <span class="algo-desc">Memulihkan pixel asli di balik watermark transparan (Shutterstock/Getty/TikTok) tanpa mengubah objek di baliknya sama sekali.</span>
+              </div>
+            </label>
+
+            <label class="algo-radio" for="algoFastMarching">
+              <input type="radio" name="inpaintingAlgo" id="algoFastMarching" value="telea">
+              <div class="algo-info">
+                <span class="algo-title">Curvature Fast Marching</span>
+                <span class="algo-desc">Sangat cepat untuk gradasi langit, dinding polos, dan stempel tanggal kecil.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Detail Preservation -->
+        <div class="tool-section">
+          <div class="section-label">PRESERVASI OBJEK &amp; NOISE</div>
+          <div class="param-control">
+            <div class="param-header">
+              <span>Preservasi Grain / Noise</span>
+              <span class="param-value" id="valGrain">65%</span>
+            </div>
+            <input type="range" id="inputGrain" min="0" max="100" value="65" class="slider-input">
+          </div>
+          <div class="param-control">
+            <div class="param-header">
+              <span>Toleransi Deteksi Teks</span>
+              <span class="param-value" id="valTolerance">28</span>
+            </div>
+            <input type="range" id="inputTolerance" min="5" max="80" value="28" class="slider-input">
+          </div>
+        </div>
+
+        <!-- Engine specs badges -->
+        <div class="sidebar-footer">
+          <div class="specs-badge">
+            <span class="status-dot"></span>
+            <span>Client-side 64-bit Canvas TypedArray Engine (100% Private, Zero Cloud Upload)</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Interactive Stage -->
+      <main class="viewport-stage" id="viewportStage">
+        <!-- Empty State Dropzone -->
+        <div class="empty-state" id="emptyDropzone">
+          <div class="empty-card">
+            <div class="drop-target-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            </div>
+            <h2 class="empty-title">Tarik &amp; Lepaskan Foto di Sini</h2>
+            <p class="empty-desc">Mendukung format PNG, JPG, WebP resolusi tinggi hingga 4K+. Bebas watermark kecil (tanggal/timestamp), logo besar, maupun watermark berulang (stock photo grid).</p>
+            <div class="empty-actions">
+              <button class="btn-primary" id="btnChooseFile">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Pilih File Gambar
+              </button>
+              <span class="empty-or">atau coba contoh berikut:</span>
+            </div>
+
+            <!-- Instant Sample Gallery Cards -->
+            <div class="sample-cards-grid" id="emptySampleCards">
+              <!-- Dynamically populated or static cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Canvas Canvas / Container -->
+        <div class="canvas-workspace" id="canvasWorkspace" style="display:none;">
+          <!-- Editor Mode Canvas Container -->
+          <div class="canvas-pan-container" id="canvasPanContainer">
+            <div class="canvas-layers" id="canvasLayers">
+              <canvas id="imageCanvas"></canvas>
+              <canvas id="maskCanvas"></canvas>
+              <canvas id="cursorCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Comparison Slider Mode Container -->
+          <div class="slider-viewport" id="sliderViewport" style="display:none;">
+            <div class="slider-container" id="sliderContainer">
+              <!-- Original Image Layer -->
+              <div class="slider-layer slider-original">
+                <canvas id="sliderOriginalCanvas"></canvas>
+                <div class="slider-badge original-badge">SEBELUM (DENGAN WATERMARK)</div>
+              </div>
+
+              <!-- Inpainted Clean Image Layer (Clipped) -->
+              <div class="slider-layer slider-processed" id="sliderProcessedClip">
+                <canvas id="sliderProcessedCanvas"></canvas>
+                <div class="slider-badge processed-badge">SESUDAH (BERSIH TOTAL)</div>
+              </div>
+
+              <!-- Interactive Divider Bar -->
+              <div class="slider-divider" id="sliderDivider">
+                <div class="slider-handle">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/><polyline points="9 18 3 12 9 6" transform="translate(18, 0) scale(-1, 1)"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side-by-Side Comparison Container -->
+          <div class="sidebyside-viewport" id="sideBySideViewport" style="display:none;">
+            <div class="side-panel side-left">
+              <div class="side-badge">ORIGINAL (WATERMARK)</div>
+              <div class="side-canvas-wrap" id="sideLeftWrap">
+                <canvas id="sideLeftCanvas"></canvas>
+              </div>
+            </div>
+            <div class="side-panel side-right">
+              <div class="side-badge">HASIL INPAINTING BERSIH</div>
+              <div class="side-canvas-wrap" id="sideRightWrap">
+                <canvas id="sideRightCanvas"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Viewport HUD -->
+          <div class="floating-hud">
+            <div class="hud-group">
+              <button class="hud-btn" id="btnZoomOut" title="Zoom Out (-)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <span class="hud-zoom-level" id="hudZoomVal">100%</span>
+              <button class="hud-btn" id="btnZoomIn" title="Zoom In (+)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button class="hud-btn" id="btnZoomFit" title="Fit to Screen (0)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              </button>
+            </div>
+
+            <div class="hud-separator"></div>
+
+            <div class="hud-group">
+              <button class="hud-pill-btn" id="btnPeekOriginal" title="Tahan Spasi untuk Lihat Gambar Asli">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Tahan untuk Bandingkan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Overlay Notification -->
+        <div class="processing-overlay" id="processingOverlay" style="display:none;">
+          <div class="processing-modal">
+            <div class="spinner-pro"></div>
+            <div class="processing-text-wrap">
+              <h4 class="processing-title" id="processingStageTitle">Memproses Rekonstruksi Tekstur...</h4>
+              <p class="processing-sub" id="processingStageSub">Menganalisa gradient edge dan mensintesis pixel tanpa mengubah objek sekeliling.</p>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="processingProgressFill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer class="app-statusbar">
+      <div class="status-left">
+        <span class="status-item" id="statusDim">Resolusi: —</span>
+        <span class="status-item-divider">•</span>
+        <span class="status-item" id="statusMaskCount">Area Mask: 0 px²</span>
+        <span class="status-item-divider">•</span>
+        <span class="status-item" id="statusZoom">Zoom: 100%</span>
+      </div>
+      <div class="status-center" id="statusNotice">
+        Warnai atau lingkari watermark yang ingin dihapus dengan kuas atau lasso.
+      </div>
+      <div class="status-right">
+        <button class="shortcuts-trigger" id="btnShortcuts">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Pintasan Keyboard
+        </button>
+      </div>
+    </footer>
+
+    <!-- Shortcuts Dialog Modal -->
+    <dialog class="modal-dialog" id="shortcutsModal">
+      <div class="modal-inner">
+        <div class="modal-header">
+          <h3>Pintasan Keyboard Pro</h3>
+          <button class="modal-close" id="btnCloseShortcuts">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="shortcuts-grid">
+            <div class="shortcut-row"><span class="sc-key">B</span><span class="sc-desc">Smart Inpaint Brush</span></div>
+            <div class="shortcut-row"><span class="sc-key">E</span><span class="sc-desc">Mask Eraser</span></div>
+            <div class="shortcut-row"><span class="sc-key">L</span><span class="sc-desc">Polygon Lasso</span></div>
+            <div class="shortcut-row"><span class="sc-key">R</span><span class="sc-desc">Box Selection</span></div>
+            <div class="shortcut-row"><span class="sc-key">W</span><span class="sc-desc">Auto Color / Font Keyer</span></div>
+            <div class="shortcut-row"><span class="sc-key">[ / ]</span><span class="sc-desc">Perkecil / Perbesar Kuas</span></div>
+            <div class="shortcut-row"><span class="sc-key">Spasi + Drag</span><span class="sc-desc">Geser Kanvas (Pan)</span></div>
+            <div class="shortcut-row"><span class="sc-key">Ctrl + Z</span><span class="sc-desc">Batalkan (Undo)</span></div>
+            <div class="shortcut-row"><span class="sc-key">Ctrl + Y</span><span class="sc-desc">Ulangi (Redo)</span></div>
+            <div class="shortcut-row"><span class="sc-key">Enter</span><span class="sc-desc">Eksekusi Hapus Watermark</span></div>
+            <div class="shortcut-row"><span class="sc-key">Tahan Spasi (di Slider)</span><span class="sc-desc">Peek Gambar Asli</span></div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Export Modal Dialog -->
+    <dialog class="modal-dialog" id="exportModal">
+      <div class="modal-inner">
+        <div class="modal-header">
+          <h3>Export Hasil Inpainting HD</h3>
+          <button class="modal-close" id="btnCloseExport">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="export-preview-card">
+            <div class="export-stat-row">
+              <span class="label">Dimensi File:</span>
+              <span class="val" id="exportDimVal">1920 × 1080 px</span>
+            </div>
+            <div class="export-stat-row">
+              <span class="label">Kualitas:</span>
+              <span class="val">100% Lossless Native Depth</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Format File</label>
+            <div class="format-chips">
+              <button class="format-chip active" data-format="png">PNG (Transparansi &amp; Lossless)</button>
+              <button class="format-chip" data-format="jpeg">JPEG (High Fidelity)</button>
+              <button class="format-chip" data-format="webp">WebP (Ukuran Efisien)</button>
+            </div>
+          </div>
+
+          <div class="form-group" id="groupJpegQuality" style="display:none;">
+            <div class="param-header">
+              <span>Kualitas Kompresi</span>
+              <span class="param-value" id="valJpegQuality">95%</span>
+            </div>
+            <input type="range" id="inputJpegQuality" min="70" max="100" value="95" class="slider-input">
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn-ghost" id="btnCancelExport">Batal</button>
+            <button class="btn-primary" id="btnConfirmDownload">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Unduh Gambar Bersih
+            </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Sample Gallery Modal -->
+    <dialog class="modal-dialog" id="sampleModal">
+      <div class="modal-inner modal-wide">
+        <div class="modal-header">
+          <h3>Pilih Foto Sampel Uji Coba</h3>
+          <button class="modal-close" id="btnCloseSamples">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Semua foto contoh di bawah dirancang untuk menguji watermark kecil (tanggal/timestamp), logo transparan, stempel besar, dan watermark berulang:</p>
+          <div class="sample-gallery-grid" id="sampleGalleryModalGrid">
+            <!-- Rendered by samples.js -->
+          </div>
+        </div>
+      </div>
+    </dialog>
+  </div>
+
+  <script src="js/samples.js"></script>
+  <script src="js/inpainter.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/slider.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
